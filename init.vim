@@ -1,3 +1,8 @@
+set encoding=utf-8  " Set the encoding displayed
+set fileencoding=utf-8  " Set the encoding written to file
+set fileformat=unix " Set file formatting to Unix
+set ff=unix
+
 syntax on " Syntax highlighting
 filetype plugin indent on
 set scrolloff=2 " Always show at least one line above/below the cursor
@@ -36,6 +41,9 @@ nnoremap <C-l> <C-w>l
 nnoremap <silent> <Esc><Esc> :noh<CR> 
 
 let mapleader = "\<Space>" 
+
+" Toggle line wrapping on leader-w
+nnoremap <silent> <Leader>w :set wrap!<CR> 
 
 " Plugins will be downloaded under the specified directory.
 call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
@@ -76,7 +84,7 @@ Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 
 " LSP code action, definition, etc.
-Plug 'glepnir/lspsaga.nvim'
+"Plug 'glepnir/lspsaga.nvim'
 
 " LSP icons and formatting
 Plug 'onsails/lspkind-nvim'
@@ -87,12 +95,22 @@ Plug 'ray-x/lsp_signature.nvim'
 " Treesitter
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 
+" Markdown preview
+Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
+
 " List ends here. Plugins become visible to Vim after this call.
 call plug#end()
 
 " Theming
 colorscheme onehalfdark
 let g:airline_theme='onehalfdark'
+
+" Markdown Preview Config (:MarkdownPreview)
+" Set to 1 to refresh markdown on save or leave buffer
+" Set to 0 to refresh markdown on edit or move currency
+let g:mkdp_refresh_slow = 0
+"Set to 1 to auto close the preview window on buffer change
+let g:mkdp_auto_close = 0
 
 " Nerdcommenter config
 " https://github.com/preservim/nerdcommenter#default-mappings
@@ -148,6 +166,7 @@ augroup numbertoggle
 augroup END
 
 " Ignore unnecessary file directories and types
+" TODO: ignore nested node_modules
 let $FZF_DEFAULT_COMMAND =  "find * -path '*/\.*' -prune -o -path 'go/pkg/**' -prune -o -path 'node_modules/**' -prune -o -path 'target/**' -prune -o -path 'dist/**' -prune -o  -type f -print -o -type l -print 2> /dev/null"
 let $FZF_DEFAULT_OPTS = "--layout=reverse --info=inline --margin=1,4 --preview-window=noborder"
 
@@ -216,14 +235,50 @@ local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protoco
 
 local lspconfig = require('lspconfig')
 
-local servers = { 'ccls', 'gopls', 'pyright' }
+-- Use an on_attach function to only map the following keys
+-- after the language server attaches to the current buffer
+local on_attach = function(client, bufnr)
+  local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+  local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+
+  -- Enable completion triggered by <c-x><c-o>
+  buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+  -- Mappings.
+  local opts = { noremap=true, silent=true }
+
+  -- See `:help vim.lsp.*` for documentation on any of the below functions
+  buf_set_keymap('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+  buf_set_keymap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+  buf_set_keymap('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+  buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+  buf_set_keymap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
+  buf_set_keymap('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
+  buf_set_keymap('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
+  buf_set_keymap('n', '<space>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
+  buf_set_keymap('n', '<space>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+  buf_set_keymap('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
+  buf_set_keymap('n', '<space>ca', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+  buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+  buf_set_keymap('n', '<space>e', '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', opts)
+  buf_set_keymap('n', '[d', '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>', opts)
+  buf_set_keymap('n', ']d', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
+  buf_set_keymap('n', '<space>q', '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>', opts)
+  buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
+
+end
+
+
+local servers = { 'ccls', 'gopls', 'pyright', 'svelte', 'cssls' }
 for _, lsp in ipairs(servers) do
   lspconfig[lsp].setup {
+    on_attach = on_attach,
     capabilities = capabilities,
   }
 end
 
 lspconfig.ccls.setup {
+  on_attach = on_attach,
   init_options = {
     compilationDatabaseDirectory = "build",
     index = {
@@ -237,6 +292,7 @@ lspconfig.ccls.setup {
 --require'lspconfig'.ccls.setup{}
 
 lspconfig.gopls.setup {
+  on_attach = on_attach,
   cmd = {"gopls", "serve"},
   settings = {
     gopls = {
@@ -268,16 +324,16 @@ lua require('lsp_signature').setup()
 
 lua << EOF
 -- Setup lspsaga
-local saga = require('lspsaga')
-saga.init_lsp_saga()
+-- local saga = require('lspsaga')
+-- saga.init_lsp_saga()
 EOF
 
 " Show hover doc
-nnoremap <silent> K <cmd>lua require('lspsaga.hover').render_hover_doc()<CR>
-nnoremap <silent> gs <cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>
-nnoremap <silent> gr <cmd>lua require('lspsaga.rename').rename()<CR>
+" nnoremap <silent> K <cmd>lua require('lspsaga.hover').render_hover_doc()<CR>
+" nnoremap <silent> gs <cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>
+" nnoremap <silent> gr <cmd>lua require('lspsaga.rename').rename()<CR>
 " Preview definition
-nnoremap <silent> gd <cmd>lua require'lspsaga.provider'.preview_definition()<CR>
+" nnoremap <silent> gd <cmd>lua require'lspsaga.provider'.preview_definition()<CR>
 
 "autocmd FileType go setlocal omnifunc=v:lua.vim.lsp.omnifunc
 
