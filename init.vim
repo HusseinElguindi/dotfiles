@@ -10,8 +10,13 @@ set scrolloff=2 " Always show at least one line above/below the cursor
 set autoread " Auto reload file if modified elsewhere
 set mouse=a " Enable mouse 
 set number relativenumber " Set hybrid line numbers (relative + current line number)
-set autoindent
-set tabstop=4 softtabstop=0 expandtab shiftwidth=4 smarttab " https://stackoverflow.com/questions/1878974/redefine-tab-as-4-spaces
+" set autoindent
+set tabstop=4 softtabstop=0 expandtab shiftwidth=4 smarttab autoindent " https://stackoverflow.com/questions/1878974/redefine-tab-as-4-spaces
+" set tabstop=4 softtabstop=4 expandtab shiftwidth=4 smarttab autoindent " https://stackoverflow.com/questions/1878974/redefine-tab-as-4-spaces
+
+setlocal spell
+set spelllang=en_us
+inoremap <C-l> <c-g>u<Esc>[s1z=`]a<c-g>u
 
 " Allow switching between buffers without saving
 set hidden
@@ -24,12 +29,15 @@ set smartcase " Case sensitive searches if it contains an uppercase letter
 set termguicolors " Terminal GUI colors
 set t_Co=256 " True colors
 set cursorline " Highlight current line
-set updatetime=500
+set updatetime=250
 
 set timeoutlen=1000
 set ttimeoutlen=0 " https://stackoverflow.com/questions/37644682/why-is-vim-so-slow/37645334
 
 set splitbelow splitright " Open splits below (for split) and to the right (for vsplit) by default
+
+" Enable column on the left to show symbols (git gutter and lsp symbols)
+set signcolumn=yes:1
 
 " Remap splits navigation to just CTRL + hjkl
 nnoremap <C-h> <C-w>h
@@ -65,10 +73,11 @@ Plug 'preservim/nerdtree'
 Plug 'ryanoasis/vim-devicons'
 
 " Better commenting
-Plug 'preservim/nerdcommenter'
+Plug 'preservim/nerdcommenter' " Syntax highlighting
+" Plug 'sheerun/vim-polyglot'
 
-" Syntax highlighting
-Plug 'sheerun/vim-polyglot'
+" Arduino syntax features
+Plug 'stevearc/vim-arduino'
 
 " Fuzzy file finding and preview
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -98,12 +107,42 @@ Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 " Markdown preview
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 
+" Vim symbols and diffs
+" Plug 'airblade/vim-gitgutter'
+
+" Recognize nested filetypes
+Plug 'suy/vim-context-commentstring'
+
+" Comment line with gcc and comment motion with gc<motion>
+Plug 'tpope/vim-commentary'
+
+Plug 'tpope/vim-surround'
+
+" LaTeX
+Plug 'xuhdev/vim-latex-live-preview', { 'for': 'tex' }
+
+Plug 'honza/vim-snippets'
+Plug 'sirver/ultisnips'
+    let g:UltiSnipsExpandTrigger = '<tab>'
+    let g:UltiSnipsJumpForwardTrigger = '<tab>'
+    let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
+
+" Plug 'lervag/vimtex'
+    " let g:tex_flavor='latex'
+    " let g:vimtex_view_method='zathura'
+    " let g:vimtex_quickfix_mode=0
+
+
+Plug 'nvim-treesitter/playground'
+
 " List ends here. Plugins become visible to Vim after this call.
 call plug#end()
 
 " Theming
 colorscheme onehalfdark
 let g:airline_theme='onehalfdark'
+" Fix pop up menu background and foreground colors
+highlight Pmenu ctermfg=188 ctermbg=236 guifg=#dcdfe4 guibg=#1f2029
 
 " Markdown Preview Config (:MarkdownPreview)
 " Set to 1 to refresh markdown on save or leave buffer
@@ -269,7 +308,8 @@ local on_attach = function(client, bufnr)
 end
 
 
-local servers = { 'ccls', 'gopls', 'pyright', 'svelte', 'cssls' }
+-- local servers = { 'ccls', 'gopls', 'pyright', 'svelte', 'cssls' }
+local servers = { 'gopls', 'pyright', 'svelte', 'cssls' }
 for _, lsp in ipairs(servers) do
   lspconfig[lsp].setup {
     on_attach = on_attach,
@@ -339,3 +379,26 @@ EOF
 
 " Go format on save
 autocmd BufWritePre *.go lua vim.lsp.buf.formatting()
+
+" autocmd BufRead,BufNewFile *.tex set shiftwidth=4 softtabstop=0 
+
+" let g:arduino_home_dir = "$HOME/.arduino15"
+
+let g:livepreview_previewer = 'evince'
+let g:livepreview_cursorhold_recompile = 0
+
+let g:UltiSnipsSnippetDirectories=['./snips']
+
+let g:tex_flavor = 'latex'
+" let g:tex_indent_items=0
+" let g:tex_indent_and=0
+" let g:tex_indent_brace=0
+
+" command! IsTexMathEnv lua print(require('tex-env').isMathEnv())
+function IsTexMathEnv()
+    let g:isTexMathEnv = 0
+lua << EOF
+    vim.g['isTexMathEnv'] = require('tex-env').isMathEnv()
+EOF
+return g:isTexMathEnv
+endfunction
