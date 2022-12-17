@@ -9,9 +9,13 @@ snippet // "Fraction" iA
 \\frac{$1}{$2}$0
 endsnippet
 
-context "len(snip.visual_text) > 0 and math()"
+context "len(snip.visual_text) > 0"
 snippet fr "Fraction2" ie
 \\frac{${VISUAL}}{$1}$0
+endsnippet
+
+snippet \fr "Fraction2" i
+\\frac{${1:${VISUAL}}}{$2}$0
 endsnippet
 
 snippet beg "begin{} / end{}" bA
@@ -20,8 +24,20 @@ snippet beg "begin{} / end{}" bA
 \end{$1}
 endsnippet
 
+snippet tbeg "begin{} / end{}" bA
+\begin{$1}{$2}{$3}
+	${0:${VISUAL}}
+\end{$1}
+endsnippet
+
+snippet bbeg "begin{} / end{}" bA
+\begin{$1}[$2]
+	${0:${VISUAL}}
+\end{$1}
+endsnippet
+
 snippet mk "Math" wA
-$$1$$2
+$${1:${VISUAL}}$$2
 endsnippet
 
 snippet dm "Math" wA
@@ -96,15 +112,41 @@ snippet template "Basic template" b
 \end{document}
 endsnippet
 
-context "math()"
+snippet thmtemp "Theorem template" b
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm}
+
+\usepackage{thmtools}
+\usepackage{mdframed}
+
+\mdfsetup{skipabove=0.75em, skipbelow=0.75em, innertopmargin=6pt, innerbottommargin=6pt}
+
+\theoremstyle{definition}
+
+\declaretheoremstyle[mdframed={ nobreak }]{box}
+\declaretheoremstyle[mdframed={ topline=false, rightline=false, bottomline=false }]{leftline}
+\declaretheorem[name=Definition, style=box, numberwithin=subsection]{definition}
+\declaretheorem[name=Theorem, style=box, numberwithin=subsection]{theorem}
+\declaretheorem[name=Example, style=leftline, numberwithin=subsection]{workedex}
+
+\declaretheoremstyle[spaceabove=0.5em, spacebelow=0.5em]{text}
+\declaretheorem[sibling=definition, style=text, name=Example, numbered=no]{example}
+\declaretheorem[sibling=definition, style=text, name=Remark, numbered=no]{remark}
+\declaretheorem[sibling=definition, style=text, name=Notation, numbered=no]{notation}
+endsnippet
+
 snippet lim "limit" w
-\lim_{${1:n} \to ${2:\infty}} 
+\lim_{${1:x} \to ${2:\infty}} $0
 endsnippet
 
 snippet bf "Bold" wA
 \textbf{${1:${VISUAL}}}$0
 endsnippet
 
+context "math()"
 snippet tx "Text" wA
 \text{${1:${VISUAL}}}$0
 endsnippet
@@ -113,3 +155,111 @@ context "math()"
 snippet rm "mathrm" ie
 \mathrm{${1:${VISUAL}}}$0
 endsnippet
+
+
+snippet ctemp "Calculus theorem template" b
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm}
+
+\usepackage{enumitem}
+
+\usepackage{parskip}
+
+\usepackage{hyperref}
+\hypersetup{linktoc=all}
+
+\usepackage[skins]{tcolorbox}
+\tcbuselibrary{theorems}
+
+\tcbset{
+	boxed/.style={
+		theorem style=plain,
+		% theorem style=break, % break after title
+		description font=\normalfont,
+		% description font=\bfseries,
+		% description delimiters none,
+		% separator sign dash,
+		terminator sign={.\hspace{0.5em}},
+		sharp corners,
+		boxrule=0.5pt,
+		left=0.2cm,right=0.2cm,top=0.2cm,
+		% left=0.2cm,right=0.2cm,top=0.2cm, bottom=0.2cm,
+		colframe=black,colback=white,coltitle=black,
+		fonttitle=\bfseries,fontupper=\normalsize,
+		parbox=false,
+	},
+	leftline/.style={
+		theorem style=plain,
+		description font=\normalfont,
+		terminator sign={.\hspace{0.5em}},
+		enhanced,
+		sharp corners,
+		boxrule=0pt,
+		frame hidden,
+		% leftrule=1pt,
+		borderline west={0.5pt}{0pt}{black},
+		left=0.2cm,right=0.2cm,top=0.2cm,
+		colback=white,coltitle=black,
+		fonttitle=\bfseries,fontupper=\normalsize,
+		parbox=false,
+	},
+	leftlineprf/.style={
+		theorem style=plain,
+		description font=\normalfont\itshape,
+		% description delimiters dash,
+		terminator sign={.\hspace{0.5em}},
+		enhanced,
+		sharp corners,
+		boxrule=0pt,
+		frame hidden,
+		borderline west={0.5pt}{0pt}{black},
+		left=0.2cm,right=0.2cm,top=0.2cm, colback=white,coltitle=black, fonttitle=\itshape,fontupper=\normalsize,
+		after upper={$\hfill\blacksquare$},
+		parbox=false,
+	}
+}
+
+\newtcbtheorem[number within=section, list inside={listthm}]{thm}{Theorem}{boxed}{thm}
+\newtcbtheorem[number within=section]{cor}{Corollary}{boxed}{cor}
+\newtcbtheorem[number within=section, list inside={listdef}]{definition}{Definition}{boxed}{def}
+
+\newtcbtheorem[number within=section, list inside={listproof}]{prf}{Proof}{leftlineprf}{prf}
+
+
+% Derivative helper commands
+\newcommand*{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand*{\at}[2]{\left. #1 \right| _{#2}}
+
+
+\title{$1}
+\author{Hussein Elguindi}
+\date{\today}
+
+\begin{document}
+\begin{titlepage}
+	\maketitle
+\end{titlepage}
+
+\setcounter{page}{2} % start toc on page 2
+\tableofcontents
+
+\tcblistof[\section*]{listdef}{Definitions}
+\tcblistof[\section*]{listthm}{Theorems}
+
+\cleardoublepage % included to not show headers on the toc pages
+\addtocontents{toc}{\protect\thispagestyle{empty}} % don't show page number in all toc page footers
+
+$0
+
+\end{document}
+endsnippet
+
+snippet def "definition" b
+\begin{definition}{$1}{}
+	$0
+\end{definition}
+endsnippet
+

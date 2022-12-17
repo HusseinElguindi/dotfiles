@@ -53,6 +53,8 @@ local isMathEnv = function()
     while node do
         if isNonMathCommand(node) then 
             return false
+        elseif node:type() == 'math_environment' then
+            return true
         elseif node:type() == 'environment' then
             for child, name in node:iter_children() do
                 if child:type() == 'begin' and name == 'begin' then 

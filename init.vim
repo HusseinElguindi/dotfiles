@@ -1,4 +1,6 @@
 set encoding=utf-8  " Set the encoding displayed
+
+
 set fileencoding=utf-8  " Set the encoding written to file
 set fileformat=unix " Set file formatting to Unix
 set ff=unix
@@ -16,7 +18,8 @@ set tabstop=4 softtabstop=0 expandtab shiftwidth=4 smarttab autoindent " https:/
 
 setlocal spell
 set spelllang=en_us
-inoremap <C-l> <c-g>u<Esc>[s1z=`]a<c-g>u
+" correct spelling on C-l
+inoremap <C-l> <c-g>u<Esc>[s1z=`]a<c-g>u 
 
 " Allow switching between buffers without saving
 set hidden
@@ -53,6 +56,10 @@ let mapleader = "\<Space>"
 " Toggle line wrapping on leader-w
 nnoremap <silent> <Leader>w :set wrap!<CR> 
 
+" show trailing white space  
+" set list
+" set listchars=trail:·
+
 " Plugins will be downloaded under the specified directory.
 call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
 
@@ -73,11 +80,10 @@ Plug 'preservim/nerdtree'
 Plug 'ryanoasis/vim-devicons'
 
 " Better commenting
-Plug 'preservim/nerdcommenter' " Syntax highlighting
-" Plug 'sheerun/vim-polyglot'
+Plug 'preservim/nerdcommenter' 
 
 " Arduino syntax features
-Plug 'stevearc/vim-arduino'
+"Plug 'stevearc/vim-arduino'
 
 " Fuzzy file finding and preview
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -91,9 +97,7 @@ Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
-
-" LSP code action, definition, etc.
-"Plug 'glepnir/lspsaga.nvim'
+Plug 'quangnguyen30192/cmp-nvim-ultisnips'
 
 " LSP icons and formatting
 Plug 'onsails/lspkind-nvim'
@@ -103,9 +107,10 @@ Plug 'ray-x/lsp_signature.nvim'
 
 " Treesitter
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-treesitter/playground'
 
 " Markdown preview
-Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
+"Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 
 " Vim symbols and diffs
 " Plug 'airblade/vim-gitgutter'
@@ -117,23 +122,16 @@ Plug 'suy/vim-context-commentstring'
 Plug 'tpope/vim-commentary'
 
 Plug 'tpope/vim-surround'
+Plug 'tpope/vim-repeat'
 
 " LaTeX
 Plug 'xuhdev/vim-latex-live-preview', { 'for': 'tex' }
 
-Plug 'honza/vim-snippets'
+" Plug 'honza/vim-snippets'
 Plug 'sirver/ultisnips'
     let g:UltiSnipsExpandTrigger = '<tab>'
     let g:UltiSnipsJumpForwardTrigger = '<tab>'
     let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
-
-" Plug 'lervag/vimtex'
-    " let g:tex_flavor='latex'
-    " let g:vimtex_view_method='zathura'
-    " let g:vimtex_quickfix_mode=0
-
-
-Plug 'nvim-treesitter/playground'
 
 " List ends here. Plugins become visible to Vim after this call.
 call plug#end()
@@ -180,8 +178,8 @@ nnoremap <C-f> :NERDTreeFind<CR>
 
 " C-p to fuzzy search files
 nnoremap <C-p> :Files<CR> 
-" C-i to fuzzy search in buffers
-nnoremap <C-i> :Buffers<CR> 
+" C-l to fuzzy search in buffers
+nnoremap <C-b> :Buffers<CR> 
 
 " Make adjusing split sizes a bit more friendly
 noremap <silent> <C-Left> :vertical resize +3<CR>
@@ -220,11 +218,18 @@ local cmp = require('cmp')
 local lspkind = require('lspkind')
 
 cmp.setup({
+  snippet = {
+    expand = function(args)
+      vim.fn["UltiSnips#Anon"](args.body) -- For `ultisnips` users.
+    end,
+  },
   mapping = {
     ['<C-d>'] = cmp.mapping(cmp.mapping.scroll_docs(-4), { 'i', 'c' }),
     ['<C-f>'] = cmp.mapping(cmp.mapping.scroll_docs(4), { 'i', 'c' }),
     ['<C-Space>'] = cmp.mapping(cmp.mapping.complete(), { 'i', 'c' }),
     ['<C-y>'] = cmp.config.disable, -- Specify `cmp.config.disable` if you want to remove the default `<C-y>` mapping.
+    ['<C-n>'] = cmp.mapping(cmp.mapping.select_next_item(), {'i','c'}),
+    ['<C-p>'] = cmp.mapping(cmp.mapping.select_prev_item(), {'i','c'}),
     ['<C-e>'] = cmp.mapping({
       i = cmp.mapping.abort(),
       c = cmp.mapping.close(),
@@ -235,6 +240,7 @@ cmp.setup({
     { name = 'nvim_lsp' },
     { name = 'nvim_lua' },
     { name = 'path' },
+    { name = 'ultisnips' }, -- For ultisnips users.
     { name = 'buffer', keyword_length = 4 },
     { name = 'cmdline' }
   },
@@ -309,7 +315,7 @@ end
 
 
 -- local servers = { 'ccls', 'gopls', 'pyright', 'svelte', 'cssls' }
-local servers = { 'gopls', 'pyright', 'svelte', 'cssls' }
+local servers = { 'gopls', 'pyright', 'svelte', 'cssls', 'tsserver', 'rust_analyzer' }
 for _, lsp in ipairs(servers) do
   lspconfig[lsp].setup {
     on_attach = on_attach,
@@ -319,6 +325,7 @@ end
 
 lspconfig.ccls.setup {
   on_attach = on_attach,
+  capabilities = capabilities,
   init_options = {
     compilationDatabaseDirectory = "build",
     index = {
@@ -333,6 +340,7 @@ lspconfig.ccls.setup {
 
 lspconfig.gopls.setup {
   on_attach = on_attach,
+  capabilities = capabilities,
   cmd = {"gopls", "serve"},
   settings = {
     gopls = {
@@ -344,6 +352,15 @@ lspconfig.gopls.setup {
   },
 }
 -- require'lspconfig'.gopls.setup{}
+
+lspconfig.arduino_language_server.setup {
+    cmd = {
+        "arduino-language-server",
+		"-clangd", "/usr/bin/clangd",
+		"-cli", "/opt/homebrew/bin/arduino-cli",
+        "-cli-config", "$HOME/Library/Arduino15/arduino-cli.yaml",
+    },
+}
 
 EOF
 set completeopt=menu,menuone,noselect
@@ -390,6 +407,8 @@ let g:livepreview_cursorhold_recompile = 0
 let g:UltiSnipsSnippetDirectories=['./snips']
 
 let g:tex_flavor = 'latex'
+" let g:livepreview_previewer = 'open -a Preview' "Mac only
+let g:livepreview_previewer = 'open -a Skim'
 " let g:tex_indent_items=0
 " let g:tex_indent_and=0
 " let g:tex_indent_brace=0
