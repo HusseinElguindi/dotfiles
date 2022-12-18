@@ -20,9 +20,17 @@ local cmp_mappings = lsp.defaults.cmp_mappings({
     ['<Tab>'] = cmp.mapping.confirm({ select = true }),
     ["<C-Space>"] = cmp.mapping.complete(),
 })
+local cmp_sources = {
+    {name = 'path'},
+    {name = 'nvim_lsp', keyword_length = 3},
+    {name = 'buffer', keyword_length = 3},
+    {name = 'ultisnips', keyword_length = 2},
+    {name = 'luasnip', keyword_length = 2},
+}
 
 lsp.setup_nvim_cmp({
     mapping = cmp_mappings,
+    sources = cmp_sources,
 })
 
 cmp.setup.cmdline(':', {
