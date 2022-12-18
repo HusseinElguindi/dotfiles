@@ -1,7 +1,7 @@
 global !p
 def math():
-	print(vim.eval('IsTexMathEnv()'))
-	return vim.eval('IsTexMathEnv()') == '1'
+	print(vim.eval('lua IsTexMathEnv()'))
+	return vim.eval('lua IsTexMathEnv()') == '1'
 endglobal
 
 context "math()"
