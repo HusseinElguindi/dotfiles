@@ -16,6 +16,19 @@ return require('packer').startup(function(use)
         requires = { 'ryanoasis/vim-devicons', opt = true }
     }
 
+    use {
+        'nvim-telescope/telescope.nvim', tag = '0.1.0',
+        requires = {
+            'nvim-lua/plenary.nvim',
+            'nvim-tree/nvim-web-devicons'
+        }
+    }
+
+    use {
+        'kyazdani42/nvim-web-devicons',
+        module = "nvim-web-devicons",
+    }
+
     use {'nvim-treesitter/nvim-treesitter', run = ':TSUpdate'}
     --use('nvim-treesitter/playground')
     use 'mbbill/undotree'

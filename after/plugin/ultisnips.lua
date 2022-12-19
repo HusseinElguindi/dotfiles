@@ -1,6 +1,4 @@
 vim.g.UltiSnipsSnippetDirectories = {'./snips'}
-
-function IsTexMathEnv()
-    return require('tex-env').isMathEnv()
-end
-
+vim.g.UltiSnipsExpandTrigger = '<Plug>(ultisnips_expand)'
+vim.g.UltiSnipsJumpForwardTrigger = '<Plug>(ultisnips_jump_forward)'
+vim.g.UltiSnipsJumpBackwardTrigger = '<Plug>(ultisnips_jump_backward)'

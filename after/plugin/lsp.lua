@@ -11,13 +11,49 @@ lsp.ensure_installed({
     'pyright',
 })
 
+local t = function(str)
+    return vim.api.nvim_replace_termcodes(str, true, true, true)
+end
+
+
 local cmp = require('cmp')
 local cmp_select = {behavior = cmp.SelectBehavior.Insert}
+local ultisnipsJumpForwards = function(fallback)
+    if cmp.visible() then
+        cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+    elseif vim.fn['UltiSnips#CanJumpForwards']() == 1 then
+        vim.api.nvim_feedkeys(t('<Plug>(ultisnips_jump_forward)'), 'm', true)
+    else
+        fallback()
+    end
+end
+local ultisnipsJumpBackwards = function(fallback)
+    if vim.fn['UltiSnips#CanJumpBackwards']() == 1 then
+        return vim.api.nvim_feedkeys(t('<Plug>(ultisnips_jump_backward)'), 'm', true)
+    else
+        fallback()
+    end
+end
 local cmp_mappings = lsp.defaults.cmp_mappings({
+    -- ['<Tab>'] = cmp.mapping.confirm({ select = true }),
+    ['<Tab>'] = cmp.mapping({
+        c = function()
+            if cmp.visible() then
+                cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+            else
+                cmp.complete()
+            end
+        end,
+        i = ultisnipsJumpForwards,
+        s = ultisnipsJumpForwards
+    }),
+    ['<S-Tab>'] = cmp.mapping({
+        i = ultisnipsJumpBackwards,
+        s = ultisnipsJumpBackwards
+    }),
     ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
     ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
     ['<C-y>'] = cmp.config.disable,
-    ['<Tab>'] = cmp.mapping.confirm({ select = true }),
     ["<C-Space>"] = cmp.mapping.complete(),
 })
 local cmp_sources = {
