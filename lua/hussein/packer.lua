@@ -23,6 +23,8 @@ return require('packer').startup(function(use)
             'nvim-tree/nvim-web-devicons'
         }
     }
+    use { 'junegunn/fzf', run = ":call fzf#install()" }
+    use { 'junegunn/fzf.vim' }
 
     use {
         'kyazdani42/nvim-web-devicons',
@@ -61,8 +63,12 @@ return require('packer').startup(function(use)
         }
     }
 
+    use 'JoosepAlviste/nvim-ts-context-commentstring'
     use 'tpope/vim-commentary'
+
     use 'tpope/vim-surround'
     use 'tpope/vim-repeat'
+
+    use 'jiangmiao/auto-pairs'
 end)
 
